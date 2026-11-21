@@ -1,0 +1,90 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 26 official column names for imports-85.data
+columns = [
+    'symboling', 'normalized-losses', 'make', 'fuel-type', 'aspiration',
+    'num-of-doors', 'body-style', 'drive-wheels', 'engine-location',
+    'wheel-base', 'length', 'width', 'height', 'curb-weight', 'engine-type',
+    'num-of-cylinders', 'engine-size', 'fuel-system', 'bore', 'stroke',
+    'compression-ratio', 'horsepower', 'peak-rpm', 'city-mpg', 'highway-mpg',
+    'price'
+]
+
+# 1. Load the dataset from /content/imports-85.data
+df = pd.read_csv('/content/imports-85.data', names=columns, na_values='?')
+
+# 2. Basic Inspection
+print("--- FIRST 5 ROWS (HEAD) ---")
+display(df.head())
+
+print("\n--- LAST 5 ROWS (TAIL) ---")
+display(df.tail())
+
+print("\n--- SHAPE (Rows, Columns) ---")
+print(df.shape)
+
+print("\n--- DATASET INFO ---")
+df.info()
+
+print("\n--- SUMMARY STATISTICS (DESCRIBE) ---")
+display(df.describe())
+
+# 3. Check Duplicates & Missing Values
+print("\n--- DUPLICATE ROWS ---")
+print("Total Duplicates:", df.duplicated().sum())
+
+# Question 5: Identify columns with missing values and count them
+print("\n--- Q5: COLUMNS WITH MISSING VALUES ---")
+missing = df.isnull().sum()
+print(missing[missing > 0])
+
+# Convert numeric columns safely
+df['price'] = pd.to_numeric(df['price'], errors='coerce')
+df['horsepower'] = pd.to_numeric(df['horsepower'], errors='coerce')
+
+# Question 1: Which car manufacturers appear most often?
+print("\n--- Q1: MANUFACTURER FREQUENCY (value_counts) ---")
+print(df['make'].value_counts())
+
+# Question 2: Average, minimum, and maximum car prices (using NumPy array)
+prices_np = df['price'].dropna().to_numpy()
+print("\n--- Q2: CAR PRICE STATISTICS (NUMPY ARRAY) ---")
+print(f"Average Price : {np.mean(prices_np):.2f}")
+print(f"Minimum Price : {np.min(prices_np):.2f}")
+print(f"Maximum Price : {np.max(prices_np):.2f}")
+
+# Question 3: Which body style has the highest average price?
+print("\n--- Q3: AVERAGE PRICE BY BODY STYLE (groupby) ---")
+body_price = df.groupby('body-style')['price'].mean().sort_values(ascending=False)
+print(body_price)
+
+# Question 4: Compare average engine size across fuel types
+print("\n--- Q4: AVERAGE ENGINE SIZE BY FUEL TYPE (groupby) ---")
+print(df.groupby('fuel-type')['engine-size'].mean())
+
+# Question 6: List the 10 most expensive cars (filtering + sorting)
+print("\n--- Q6: TOP 10 MOST EXPENSIVE CARS ---")
+valid_cars = df[df['price'].notnull()]
+top_10 = valid_cars[['make', 'body-style', 'fuel-type', 'engine-size', 'horsepower', 'price']].sort_values(by='price', ascending=False).head(10)
+display(top_10)
+
+# Chart 1: Manufacturer-count bar chart
+plt.figure(figsize=(10, 5))
+df['make'].value_counts().plot(kind='bar', color='steelblue')
+plt.title('Car Count by Manufacturer')
+plt.xlabel('Manufacturer (Make)')
+plt.ylabel('Number of Cars')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# Chart 2: Price histogram
+plt.figure(figsize=(8, 5))
+plt.hist(prices_np, bins=15, color='coral', edgecolor='black')
+plt.title('Distribution of Car Prices')
+plt.xlabel('Price')
+plt.ylabel('Frequency')
+plt.tight_layout()
+plt.show()
